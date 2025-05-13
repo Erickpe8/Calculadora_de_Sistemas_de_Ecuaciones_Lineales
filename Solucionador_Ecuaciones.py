@@ -10,7 +10,7 @@ import re
 class SolucionadorEcuaciones:
     def __init__(self, root):
         self.root = root
-        self.root.title("Solucionador de Sistemas de Ecuaciones Lineales")
+        self.root.title("Calculadora de Sistemas de Ecuaciones Lineales")
         self.root.geometry("1000x700")
         self.root.resizable(True, True)
         
