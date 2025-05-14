@@ -1,164 +1,170 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from mpl_toolkits.mplot3d import Axes3D
-import sympy as sp
-import re
+import tkinter as tk  # Biblioteca principal para interfaces gráficas
+from tkinter import ttk, messagebox, scrolledtext  # Componentes avanzados de Tkinter
+import numpy as np  # Biblioteca para operaciones numéricas y matrices
+import matplotlib.pyplot as plt  # Para crear gráficos 2D
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # Integrar gráficos en Tkinter
+from mpl_toolkits.mplot3d import Axes3D  # Gráficos en 3D de matplotlib
+import sympy as sp  # Para álgebra simbólica
+import re  # Para trabajar con expresiones regulares
+
 
 class SolucionadorEcuaciones:
     def __init__(self, root):
+        # Asigna la ventana principal (root) y establece el título y tamaño de la ventana
         self.root = root
-        self.root.title("Calculadora de Sistemas de Ecuaciones Lineales")
-        self.root.geometry("1000x700")
-        self.root.resizable(True, True)
+        self.root.title("Calculadora de Sistemas de Ecuaciones Lineales")  # Establece el título de la ventana
+        self.root.geometry("1000x700")  # Establece las dimensiones de la ventana (1000px x 700px)
+        self.root.resizable(True, True)  # Permite redimensionar la ventana en ambas direcciones (ancho y alto)
         
-        # Variables
-        self.tamano_sistema = tk.IntVar(value=3)
-        self.metodo_solucion = tk.StringVar(value="Eliminación de Gauss")
-        self.matriz_entries = []
-        self.vector_entries = []
-        self.mostrar_pasos = tk.BooleanVar(value=True)
-        self.mostrar_grafica = tk.BooleanVar(value=True)
-        
-        # Crear interfaz
-        self.crear_interfaz()
+        # Variables:
+        # Definición de variables para gestionar las opciones seleccionadas y los datos ingresados
+        self.tamano_sistema = tk.IntVar(value=3)  # Variable para definir el tamaño del sistema de ecuaciones, valor inicial de 3
+        self.metodo_solucion = tk.StringVar(value="Eliminación de Gauss")  # Variable para definir el método de solución, valor inicial de "Eliminación de Gauss"
+        self.matriz_entries = []  # Lista para almacenar los campos de entrada de la matriz de coeficientes
+        self.vector_entries = []  # Lista para almacenar los campos de entrada del vector de constantes
+        self.mostrar_pasos = tk.BooleanVar(value=True)  # Variable booleana para decidir si se deben mostrar los pasos de la solución
+        self.mostrar_grafica = tk.BooleanVar(value=True)  # Variable booleana para decidir si se debe mostrar la gráfica
+
+        # Crear la interfaz gráfica con los componentes definidos
+        self.crear_interfaz()  # Llama al método para crear la interfaz gráfica
+
         
     def crear_interfaz(self):
-        # Frame principal
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
-        
+        # Frame principal: contenedor principal de la interfaz
+        main_frame = ttk.Frame(self.root, padding="10")  # Crea un marco con padding de 10
+        main_frame.pack(fill=tk.BOTH, expand=True)  # Empaqueta el marco principal para llenar el espacio disponible
+    
         # Frame izquierdo para entrada de datos
         left_frame = ttk.LabelFrame(main_frame, text="Configuración y Entrada de Datos", padding="10")
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)  # Empaqueta el marco izquierdo con texto explicativo
+
         # Frame derecho para resultados
         right_frame = ttk.LabelFrame(main_frame, text="Resultados", padding="10")
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)  # Empaqueta el marco derecho con texto explicativo
         
-        # Selección de tamaño
+        # Selección de tamaño: permite elegir el tamaño del sistema de ecuaciones
         ttk.Label(left_frame, text="Tamaño del sistema:").grid(row=0, column=0, sticky=tk.W, pady=5)
         tamano_combo = ttk.Combobox(left_frame, textvariable=self.tamano_sistema, 
-                                    values=[2, 3, 4, 5, 6], width=5, state="readonly")
-        tamano_combo.grid(row=0, column=1, sticky=tk.W, pady=5)
-        tamano_combo.bind("<<ComboboxSelected>>", self.actualizar_matriz)
+                                    values=[2, 3, 4, 5, 6], width=5, state="readonly")  # Crea un combobox para seleccionar el tamaño
+        tamano_combo.grid(row=0, column=1, sticky=tk.W, pady=5)  # Empaqueta el combobox en la grilla
+        tamano_combo.bind("<<ComboboxSelected>>", self.actualizar_matriz)  # Asocia el evento para actualizar la matriz cuando se cambia el tamaño
         
-        # Selección de método
+        # Selección de método: permite elegir el método de solución
         ttk.Label(left_frame, text="Método de solución:").grid(row=1, column=0, sticky=tk.W, pady=5)
         metodos = ["Eliminación de Gauss", "Gauss-Jordan", "Método de Cramer", 
-                  "Inversa de la matriz", "Método de Jacobi", "Método de Gauss-Seidel"]
+                "Inversa de la matriz", "Método de Jacobi", "Método de Gauss-Seidel"]
         metodo_combo = ttk.Combobox(left_frame, textvariable=self.metodo_solucion, 
-                                   values=metodos, width=20, state="readonly")
-        metodo_combo.grid(row=1, column=1, columnspan=2, sticky=tk.W, pady=5)
+                                    values=metodos, width=20, state="readonly")  # Crea un combobox para seleccionar el método
+        metodo_combo.grid(row=1, column=1, columnspan=2, sticky=tk.W, pady=5)  # Empaqueta el combobox en la grilla
         
-        # Opciones adicionales
+        # Opciones adicionales: permite elegir si se deben mostrar los pasos y la gráfica
         ttk.Checkbutton(left_frame, text="Mostrar pasos", variable=self.mostrar_pasos).grid(
-            row=2, column=0, sticky=tk.W, pady=5)
+            row=2, column=0, sticky=tk.W, pady=5)  # Checkbox para mostrar los pasos
         ttk.Checkbutton(left_frame, text="Mostrar gráfica (2D/3D)", variable=self.mostrar_grafica).grid(
-            row=2, column=1, columnspan=2, sticky=tk.W, pady=5)
-        
-        # Frame para la matriz
+            row=2, column=1, columnspan=2, sticky=tk.W, pady=5)  # Checkbox para mostrar la gráfica
+
+        # Frame para la matriz: contenedor para la matriz de coeficientes
         self.matriz_frame = ttk.LabelFrame(left_frame, text="Matriz de coeficientes (A)", padding="10")
-        self.matriz_frame.grid(row=3, column=0, columnspan=3, sticky=tk.NSEW, pady=10)
+        self.matriz_frame.grid(row=3, column=0, columnspan=3, sticky=tk.NSEW, pady=10)  # Empaqueta el frame de la matriz en la grilla
         
-        # Frame para el vector
+        # Frame para el vector: contenedor para el vector de términos independientes
         self.vector_frame = ttk.LabelFrame(left_frame, text="Vector de términos independientes (b)", padding="10")
-        self.vector_frame.grid(row=4, column=0, columnspan=3, sticky=tk.NSEW, pady=10)
+        self.vector_frame.grid(row=4, column=0, columnspan=3, sticky=tk.NSEW, pady=10)  # Empaqueta el frame del vector en la grilla
         
-        # Botones
-        btn_frame = ttk.Frame(left_frame)
-        btn_frame.grid(row=5, column=0, columnspan=3, pady=10)
+        # Botones: botones para resolver el sistema, limpiar los datos y cargar un ejemplo
+        btn_frame = ttk.Frame(left_frame)  # Crea un frame para contener los botones
+        btn_frame.grid(row=5, column=0, columnspan=3, pady=10)  # Empaqueta el frame de botones en la grilla
         
-        ttk.Button(btn_frame, text="Resolver", command=self.resolver_sistema).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="Limpiar", command=self.limpiar_datos).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="Ejemplo", command=self.cargar_ejemplo).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Resolver", command=self.resolver_sistema).pack(side=tk.LEFT, padx=5)  # Botón para resolver el sistema
+        ttk.Button(btn_frame, text="Limpiar", command=self.limpiar_datos).pack(side=tk.LEFT, padx=5)  # Botón para limpiar los datos
+        ttk.Button(btn_frame, text="Ejemplo", command=self.cargar_ejemplo).pack(side=tk.LEFT, padx=5)  # Botón para cargar un ejemplo
         
-        # Área de resultados
+        # Área de resultados: espacio para mostrar los resultados de la solución
         self.resultado_text = scrolledtext.ScrolledText(right_frame, wrap=tk.WORD, width=50, height=20)
-        self.resultado_text.pack(fill=tk.BOTH, expand=True, pady=5)
+        self.resultado_text.pack(fill=tk.BOTH, expand=True, pady=5)  # Empaqueta el área de texto para resultados
         
-        # Frame para gráfica
+        # Frame para gráfica: contenedor para la visualización gráfica de los resultados
         self.grafica_frame = ttk.LabelFrame(right_frame, text="Visualización gráfica", padding="10")
-        self.grafica_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        self.grafica_frame.pack(fill=tk.BOTH, expand=True, pady=5)  # Empaqueta el frame de la gráfica
         
-        # Inicializar matriz
+        # Inicializar matriz: llama al método para actualizar la matriz con el tamaño seleccionado
         self.actualizar_matriz()
         
-        # Configurar expansión
-        left_frame.columnconfigure(2, weight=1)
-        left_frame.rowconfigure(3, weight=1)
-        left_frame.rowconfigure(4, weight=1)
+        # Configurar expansión de las columnas y filas en el frame izquierdo para permitir una expansión dinámica
+        left_frame.columnconfigure(2, weight=1)  # Configura la tercera columna para que se expanda proporcionalmente
+        left_frame.rowconfigure(3, weight=1)  # Configura la cuarta fila para que se expanda proporcionalmente
+        left_frame.rowconfigure(4, weight=1)  # Configura la quinta fila para que se expanda proporcionalmente
+
         
     def actualizar_matriz(self, event=None):
-        # Limpiar frames
+        # Limpiar frames: elimina todos los widgets de los frames de la matriz y el vector
         for widget in self.matriz_frame.winfo_children():
-            widget.destroy()
+            widget.destroy()  # Elimina todos los widgets del frame de la matriz
         for widget in self.vector_frame.winfo_children():
-            widget.destroy()
-            
-        tamano = self.tamano_sistema.get()
-        self.matriz_entries = []
-        self.vector_entries = []
+            widget.destroy()  # Elimina todos los widgets del frame del vector
         
-        # Crear entradas para la matriz
-        for i in range(tamano):
-            fila = []
-            for j in range(tamano):
-                entry = ttk.Entry(self.matriz_frame, width=8)
-                entry.grid(row=i, column=j, padx=3, pady=3)
-                fila.append(entry)
-            self.matriz_entries.append(fila)
-            
-        # Crear entradas para el vector
-        for i in range(tamano):
-            entry = ttk.Entry(self.vector_frame, width=8)
-            entry.grid(row=i, column=0, padx=3, pady=3)
-            self.vector_entries.append(entry)
+        tamano = self.tamano_sistema.get()  # Obtiene el tamaño del sistema de ecuaciones seleccionado
+        self.matriz_entries = []  # Limpia la lista de entradas de la matriz
+        self.vector_entries = []  # Limpia la lista de entradas del vector
+        
+        # Crear entradas para la matriz: genera una matriz de cuadros de texto según el tamaño seleccionado
+        for i in range(tamano):  # Recorre las filas de la matriz
+            fila = []  # Lista para almacenar las entradas de cada fila
+            for j in range(tamano):  # Recorre las columnas de la matriz
+                entry = ttk.Entry(self.matriz_frame, width=8)  # Crea una entrada (input) para un valor de la matriz
+                entry.grid(row=i, column=j, padx=3, pady=3)  # Coloca la entrada en la grilla con padding
+                fila.append(entry)  # Añade la entrada a la fila
+            self.matriz_entries.append(fila)  # Añade la fila completa a la lista de matrices
+        
+        # Crear entradas para el vector: genera entradas para los términos independientes del sistema
+        for i in range(tamano):  # Recorre las filas del vector
+            entry = ttk.Entry(self.vector_frame, width=8)  # Crea una entrada (input) para un valor del vector
+            entry.grid(row=i, column=0, padx=3, pady=3)  # Coloca la entrada en la grilla con padding
+            self.vector_entries.append(entry)  # Añade la entrada a la lista de entradas del vector
+
             
     def obtener_matriz_y_vector(self):
-        tamano = self.tamano_sistema.get()
-        matriz_A = np.zeros((tamano, tamano))
-        vector_b = np.zeros(tamano)
+        tamano = self.tamano_sistema.get()  # Obtiene el tamaño del sistema de ecuaciones
+        matriz_A = np.zeros((tamano, tamano))  # Inicializa una matriz de ceros con el tamaño adecuado
+        vector_b = np.zeros(tamano)  # Inicializa un vector de ceros con el tamaño adecuado
         
-        # Obtener valores de la matriz
-        for i in range(tamano):
-            for j in range(tamano):
+        # Obtener valores de la matriz: se recorren las entradas de la matriz y se almacenan los valores
+        for i in range(tamano):  # Recorre las filas de la matriz
+            for j in range(tamano):  # Recorre las columnas de la matriz
                 try:
-                    valor = float(self.matriz_entries[i][j].get())
-                    matriz_A[i, j] = valor
-                except ValueError:
+                    valor = float(self.matriz_entries[i][j].get())  # Intenta obtener el valor como flotante
+                    matriz_A[i, j] = valor  # Asigna el valor a la posición correspondiente de la matriz
+                except ValueError:  # Si no es un número válido, muestra un error
                     messagebox.showerror("Error", f"Valor inválido en la posición ({i+1},{j+1}) de la matriz")
-                    return None, None
-        
-        # Obtener valores del vector
-        for i in range(tamano):
+                    return None, None  # Si hay un error, retorna None para la matriz y el vector
+                
+        # Obtener valores del vector: se recorren las entradas del vector y se almacenan los valores
+        for i in range(tamano):  # Recorre las filas del vector
             try:
-                valor = float(self.vector_entries[i].get())
-                vector_b[i] = valor
-            except ValueError:
+                valor = float(self.vector_entries[i].get())  # Intenta obtener el valor como flotante
+                vector_b[i] = valor  # Asigna el valor al vector
+            except ValueError:  # Si no es un número válido, muestra un error
                 messagebox.showerror("Error", f"Valor inválido en la posición {i+1} del vector")
-                return None, None
-                
-        return matriz_A, vector_b
-    
-    def limpiar_datos(self):
-        # Limpiar entradas de la matriz
-        for i in range(len(self.matriz_entries)):
-            for j in range(len(self.matriz_entries[i])):
-                self.matriz_entries[i][j].delete(0, tk.END)
-                
-        # Limpiar entradas del vector
-        for entry in self.vector_entries:
-            entry.delete(0, tk.END)
-            
-        # Limpiar resultados
-        self.resultado_text.delete(1.0, tk.END)
+                return None, None  # Si hay un error, retorna None para la matriz y el vector
         
-        # Limpiar gráfica
-        for widget in self.grafica_frame.winfo_children():
-            widget.destroy()
+        return matriz_A, vector_b  # Retorna la matriz y el vector llenos con los valores obtenidos
+
+    def limpiar_datos(self):
+        # Limpiar entradas de la matriz: elimina el contenido de las entradas de la matriz
+        for i in range(len(self.matriz_entries)):  # Recorre las filas de la matriz
+            for j in range(len(self.matriz_entries[i])):  # Recorre las columnas de la matriz
+                self.matriz_entries[i][j].delete(0, tk.END)  # Borra el contenido de cada entrada de la matriz
+        
+        # Limpiar entradas del vector: elimina el contenido de las entradas del vector
+        for entry in self.vector_entries:  # Recorre las entradas del vector
+            entry.delete(0, tk.END)  # Borra el contenido de cada entrada del vector
+        
+        # Limpiar resultados: elimina el texto en el área de resultados
+        self.resultado_text.delete(1.0, tk.END)  # Borra todo el texto en el área de resultados
+        
+        # Limpiar gráfica: elimina los widgets en el frame de la gráfica
+        for widget in self.grafica_frame.winfo_children():  # Recorre todos los widgets del frame de la gráfica
+            widget.destroy()  # Elimina cada widget
     
     def cargar_ejemplo(self):
         # Limpiar datos actuales
@@ -168,14 +174,11 @@ class SolucionadorEcuaciones:
         self.tamano_sistema.set(3)
         self.actualizar_matriz()
         
-        # Ejemplo de sistema 3x3
-        matriz_ejemplo = [
-            [4, -1, 1],
-            [2, 5, 2],
-            [1, 2, 4]
-        ]
+        # Generar una matriz 3x3 aleatoria
+        matriz_ejemplo = np.random.randint(-10, 10, size=(3, 3))  # Números aleatorios entre -10 y 10
         
-        vector_ejemplo = [8, 3, 11]
+        # Generar un vector 3x1 aleatorio
+        vector_ejemplo = np.random.randint(-10, 10, size=3)  # Números aleatorios entre -10 y 10
         
         # Cargar valores en la interfaz
         for i in range(3):
@@ -184,7 +187,9 @@ class SolucionadorEcuaciones:
                 
         for i in range(3):
             self.vector_entries[i].insert(0, str(vector_ejemplo[i]))
-    
+
+    #/quede aqui 
+
     def resolver_sistema(self):
         # Obtener matriz y vector
         A, b = self.obtener_matriz_y_vector()
