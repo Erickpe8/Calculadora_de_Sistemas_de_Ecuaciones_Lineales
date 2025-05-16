@@ -132,8 +132,8 @@ class SolucionadorEcuaciones:
         for i in range(tamano):  # Recorre las filas de la matriz
             for j in range(tamano):  # Recorre las columnas de la matriz
                 try:
-                    valor = float(self.matriz_entries[i][j].get())  # Intenta obtener el valor como flotante
-                    matriz_A[i, j] = valor  # Asigna el valor a la posición correspondiente de la matriz
+                    valor = sp.Rational(self.matriz_entries[i][j].get()) #Corrección para aceptar fracciones ## Se convierte el texto ingresado por el usuario en la celda (i, j) a un número racional
+                    matriz_A[i, j] = float(valor) # Se convierte el valor racional a un número decimal (float) y se asigna a la matriz en la posición correspondiente
                 except ValueError:  # Si no es un número válido, muestra un error
                     messagebox.showerror("Error", f"Valor inválido en la posición ({i+1},{j+1}) de la matriz")
                     return None, None  # Si hay un error, retorna None para la matriz y el vector
@@ -141,8 +141,8 @@ class SolucionadorEcuaciones:
         # Obtener valores del vector: se recorren las entradas del vector y se almacenan los valores
         for i in range(tamano):  # Recorre las filas del vector
             try:
-                valor = float(self.vector_entries[i].get())  # Intenta obtener el valor como flotante
-                vector_b[i] = valor  # Asigna el valor al vector
+                valor = sp.Rational(self.vector_entries[i].get())  # Convierte el valor ingresado en el campo del vector en un número racional
+                vector_b[i] = float(valor)  # Asigna el valor racional convertido a decimal a la posición i del vector b
             except ValueError:  # Si no es un número válido, muestra un error
                 messagebox.showerror("Error", f"Valor inválido en la posición {i+1} del vector")
                 return None, None  # Si hay un error, retorna None para la matriz y el vector
